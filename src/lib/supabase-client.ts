@@ -12,6 +12,8 @@ export const supabaseClient = createClient(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: "pkce", // 👈 asegura que Supabase gestione cookies seguras en producción
   },
 });
 

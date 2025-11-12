@@ -17,15 +17,14 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
-          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
         },
       },
     }
   );
 
-  // Intentar obtener sesión
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -33,14 +32,12 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isAuthPage = pathname.startsWith("/auth");
 
-  // Si no hay sesión y no está en /auth → redirigir
   if (!session && !isAuthPage) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/auth";
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Si ya hay sesión y va a /auth → redirigir al home
   if (session && isAuthPage) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/";
@@ -53,4 +50,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/", "/auth", "/dashboard/:path*"],
 };
-
