@@ -1,66 +1,45 @@
-import { createServerClient } from "@supabase/ssr";
+import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
+  // Crear cliente de Supabase
+  const supabase = createMiddlewareClient({ req, res });
 
-  // Refrescar sesión si es necesario
+  // Obtener sesión actual
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  // Proteger rutas que requieren autenticación
-  if (!user && !request.nextUrl.pathname.startsWith("/auth")) {
-    const redirectUrl = request.nextUrl.clone();
+  const { pathname } = req.nextUrl;
+  const isAuthPage = pathname.startsWith("/auth");
+
+  // Si no hay sesión y la ruta no es /auth → redirigir al login
+  if (!session && !isAuthPage) {
+    const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = "/auth";
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Redirigir a home si ya está autenticado y va a /auth
-  if (user && request.nextUrl.pathname.startsWith("/auth")) {
-    const redirectUrl = request.nextUrl.clone();
+  // Si hay sesión y va a /auth → redirigir al dashboard
+  if (session && isAuthPage) {
+    const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = "/";
     return NextResponse.redirect(redirectUrl);
   }
 
-  return supabaseResponse;
+  return res;
 }
 
+// ✅ Rutas donde se aplica el middleware
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/",
+    "/auth",
+    "/dashboard/:path*",
+    "/profile/:path*",
+    // Agrega aquí las rutas que quieras proteger
   ],
 };
 
