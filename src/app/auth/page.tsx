@@ -13,6 +13,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const router = useRouter();
@@ -20,21 +21,35 @@ export default function AuthPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setMessage(null);
     setIsLoading(true);
 
     try {
-      const { error: authError } = isLogin
-        ? await signIn(email, password)
-        : await signUp(email, password);
+      if (isLogin) {
+        // 🔹 LOGIN NORMAL (con contraseña)
+        const { error: authError } = await signIn(email, password);
 
-      if (authError) {
-        setError(authError.message);
+        if (authError) {
+          setError(authError.message);
+        } else {
+          router.push("/");
+          router.refresh();
+        }
       } else {
-        router.push("/");
-        router.refresh();
+        // 🔹 REGISTRO NUEVO USUARIO
+        const { error: signUpError } = await signUp(email, password);
+
+        if (signUpError) {
+          setError(signUpError.message);
+        } else {
+          // Mensaje informativo (confirmación por correo)
+          setMessage(
+            "✅ Revisa tu correo y confirma tu cuenta para continuar. El enlace te redirigirá automáticamente a AthleteAI Pro."
+          );
+        }
       }
     } catch (err) {
-      setError("Ocurrió un error inesperado");
+      setError("❌ Ocurrió un error inesperado. Inténtalo de nuevo.");
     } finally {
       setIsLoading(false);
     }
@@ -86,6 +101,12 @@ export default function AuthPage() {
             </div>
           )}
 
+          {message && (
+            <div className="rounded-xl bg-green-50 p-3 text-sm text-green-600 dark:bg-green-900/20 dark:text-green-400">
+              {message}
+            </div>
+          )}
+
           <Button
             type="submit"
             disabled={isLoading}
@@ -96,8 +117,10 @@ export default function AuthPage() {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {isLogin ? "Iniciando sesión..." : "Creando cuenta..."}
               </>
+            ) : isLogin ? (
+              "Iniciar sesión"
             ) : (
-              isLogin ? "Iniciar sesión" : "Crear cuenta"
+              "Crear cuenta"
             )}
           </Button>
         </form>
@@ -108,6 +131,7 @@ export default function AuthPage() {
             onClick={() => {
               setIsLogin(!isLogin);
               setError(null);
+              setMessage(null);
             }}
             className="text-primary hover:underline"
           >
@@ -120,4 +144,3 @@ export default function AuthPage() {
     </div>
   );
 }
-
