@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --color-background: #f7f8fb;
+  --color-foreground: #0a0f1f;
+  --color-muted: rgba(10, 15, 31, 0.64);
+  --color-border: rgba(22, 26, 39, 0.16);
+  --glass-surface: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --radius-base: 16px;
+  --radius-lg: 24px;
+  --radius-md: 12px;
+  --radius-sm: 10px;
+  --shadow-soft: 0 24px 60px -32px rgba(10, 132, 255, 0.35);
+}
+
+:root.dark {
+  color-scheme: dark;
+  --color-background: #06080f;
+  --color-foreground: #f4f7fb;
+  --color-muted: rgba(244, 247, 251, 0.68);
+  --color-border: rgba(132, 145, 175, 0.24);
+  --glass-surface: rgba(16, 23, 40, 0.72);
+  --glass-border: rgba(10, 132, 255, 0.24);
+  --shadow-soft: 0 24px 80px -32px rgba(10, 132, 255, 0.45);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  background: radial-gradient(
+      circle at top right,
+      rgba(10, 132, 255, 0.16),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at bottom left,
+      rgba(255, 106, 0, 0.12),
+      transparent 55%
+    ),
+    var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), "Inter", system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100vh;
+  letter-spacing: 0.01em;
+}
+
+.glass-panel {
+  position: relative;
+  border-radius: var(--radius-base);
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-soft);
+}
+
+.glass-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-base);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+.grid-auto-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
