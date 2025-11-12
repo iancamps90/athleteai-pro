@@ -1,45 +1,56 @@
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next({
+    request: {
+      headers: new Headers(request.headers),
+    },
+  });
 
-  // Crear cliente de Supabase
-  const supabase = createMiddlewareClient({ req, res });
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
 
-  // Obtener sesión actual
+  // Intentar obtener sesión
   const {
     data: { session },
   } = await supabase.auth.getSession();
 
-  const { pathname } = req.nextUrl;
+  const pathname = request.nextUrl.pathname;
   const isAuthPage = pathname.startsWith("/auth");
 
-  // Si no hay sesión y la ruta no es /auth → redirigir al login
+  // Si no hay sesión y no está en /auth → redirigir
   if (!session && !isAuthPage) {
-    const redirectUrl = req.nextUrl.clone();
+    const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/auth";
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Si hay sesión y va a /auth → redirigir al dashboard
+  // Si ya hay sesión y va a /auth → redirigir al home
   if (session && isAuthPage) {
-    const redirectUrl = req.nextUrl.clone();
+    const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/";
     return NextResponse.redirect(redirectUrl);
   }
 
-  return res;
+  return response;
 }
 
-// ✅ Rutas donde se aplica el middleware
 export const config = {
-  matcher: [
-    "/",
-    "/auth",
-    "/dashboard/:path*",
-    "/profile/:path*",
-    // Agrega aquí las rutas que quieras proteger
-  ],
+  matcher: ["/", "/auth", "/dashboard/:path*"],
 };
 
