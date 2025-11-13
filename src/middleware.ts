@@ -1,4 +1,6 @@
 /* eslint-disable prefer-const */
+
+/*
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -70,3 +72,4 @@ export const config = {
     "/account/:path*",
   ],
 };
+*/
