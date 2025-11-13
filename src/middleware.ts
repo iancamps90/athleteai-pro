@@ -1,5 +1,17 @@
 /* eslint-disable prefer-const */
 
+
+
+// src/middleware.ts
+export function middleware() {
+  return new Response(null, { status: 200 });
+}
+
+export const config = {
+  matcher: [],
+};
+
+
 /*
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
