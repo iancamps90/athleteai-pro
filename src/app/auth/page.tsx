@@ -19,10 +19,12 @@ export default function AuthPage() {
   const { signIn, signUp, user, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  // ✅ Si ya hay sesión activa, redirige automáticamente al dashboard
+  // ✅ Redirección segura si ya hay sesión activa
   useEffect(() => {
-    if (!authLoading && user) {
-      router.push("/");
+    if (authLoading) return; // Espera a que el hook cargue
+    if (user) {
+      console.log("✅ Usuario detectado, redirigiendo al dashboard...");
+      router.replace("/"); // replace evita bucles o historial roto
     }
   }, [authLoading, user, router]);
 
@@ -34,18 +36,22 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
+        console.log("🟢 Iniciando sesión con:", email);
         const { error: authError } = await signIn(email, password);
 
         if (authError) {
+          console.error("❌ Error login:", authError.message);
           setError(authError.message);
         } else {
-          router.push("/");
-          router.refresh();
+          console.log("✅ Login correcto, redirigiendo...");
+          router.replace("/");
         }
       } else {
+        console.log("🟣 Registrando usuario nuevo:", email);
         const { error: signUpError } = await signUp(email, password);
 
         if (signUpError) {
+          console.error("❌ Error registro:", signUpError.message);
           setError(signUpError.message);
         } else {
           setMessage(
@@ -54,11 +60,24 @@ export default function AuthPage() {
         }
       }
     } catch (err) {
-      setError("❌ Ocurrió un error inesperado. Inténtalo de nuevo.");
+      console.error("❌ Error inesperado:", err);
+      setError("Ocurrió un error inesperado. Inténtalo de nuevo.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  // ✅ Evita render vacío mientras detecta sesión
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-blue">
+        <Loader2 className="h-6 w-6 animate-spin text-white" />
+      </div>
+    );
+  }
+
+  // ✅ Si hay sesión, no renderizamos el login (ya redirige arriba)
+  if (user) return null;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-blue p-6">
