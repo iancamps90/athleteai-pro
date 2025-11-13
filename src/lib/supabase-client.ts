@@ -18,6 +18,7 @@ export const supabaseClient = createClient(supabaseUrl, supabaseKey, {
     detectSessionInUrl: true,
     flowType: "pkce", // ✅ Importante para login en producción (Next + Vercel)
   },
+  
 });
 
 export type SupabaseClient = typeof supabaseClient;
