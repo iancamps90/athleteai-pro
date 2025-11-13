@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,8 +15,16 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+
+  const { signIn, signUp, user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+
+  // ✅ Si ya hay sesión activa, redirige automáticamente al dashboard
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/");
+    }
+  }, [authLoading, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +34,6 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
-        // 🔹 LOGIN NORMAL (con contraseña)
         const { error: authError } = await signIn(email, password);
 
         if (authError) {
@@ -36,13 +43,11 @@ export default function AuthPage() {
           router.refresh();
         }
       } else {
-        // 🔹 REGISTRO NUEVO USUARIO
         const { error: signUpError } = await signUp(email, password);
 
         if (signUpError) {
           setError(signUpError.message);
         } else {
-          // Mensaje informativo (confirmación por correo)
           setMessage(
             "✅ Revisa tu correo y confirma tu cuenta para continuar. El enlace te redirigirá automáticamente a AthleteAI Pro."
           );
