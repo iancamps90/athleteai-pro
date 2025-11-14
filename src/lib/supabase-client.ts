@@ -33,8 +33,11 @@ export async function signInWithSession(email: string, password: string) {
 
 // Recuperar sesión si se recarga la página
 export function restoreSession() {
+  if (typeof window === "undefined") return null;
+
   const raw = localStorage.getItem("sb-auth-token");
   if (!raw) return null;
+
   const session = JSON.parse(raw);
   if (session) {
     supabaseClient.auth.setSession(session);
